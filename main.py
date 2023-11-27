@@ -10,11 +10,13 @@ LOG_FILE = 'log.csv'
 STORAGE_LOG_FILE = 'StorageLog.csv'
 COLUMNS = ['Equipment', 'Tech Name', 'Cabinet/Location', 'Shelf', 'Status', 'Timestamp']
 
+# Create CSV file if it does not exist
 def create_csv_if_not_exists(file_name, columns):
     if not os.path.exists(file_name):
         with open(file_name, 'w') as f:
             f.write(','.join(columns) + '\n')
-
+            
+# Determining Equipment statuses
 def determine_status(equipment, cabinet):
     log_file = STORAGE_LOG_FILE if equipment.startswith('STOR.') else LOG_FILE
     if not os.path.exists(log_file):
@@ -28,6 +30,7 @@ def determine_status(equipment, cabinet):
 
     return 'checked in' if count % 2 == 1 else 'checked out'
 
+# Deleting last entry for specific Equipment when necessary
 def delete_last_entry_for_equipment(equipment_name, log_file):
     try:
         df = pd.read_csv(log_file)

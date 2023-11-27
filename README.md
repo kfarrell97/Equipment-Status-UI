@@ -1,2 +1,2 @@
 # Equipment-Status-UI
-Equipment Check in/check out UI for tracking purposes
+This python script is a GUI application for managing inventory, developed using the Tkinter library. It allows users to input data about various equipment items, such as equipment ID, technician name, location, and shelf number, and saves this information to CSV files. The application can determine and display the status of each equipment item, indicating whether it's checked in or out, and supports special functionalities like voiding entries and performing admin corrections. Additionally, it features a user-friendly layout with entry fields, a message display area for feedback, and a logo, creating an intuitive and interactive experience for the user.

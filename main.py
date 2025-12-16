@@ -1,3 +1,4 @@
+# import the necessary stuff
 import pandas as pd
 from datetime import datetime
 import os
@@ -8,15 +9,18 @@ from PIL import Image, ImageTk
 # Constants and Helper Functions
 LOG_FILE = 'log.csv'
 STORAGE_LOG_FILE = 'StorageLog.csv'
-COLUMNS = ['Equipment', 'Tech Name', 'Cabinet/Location', 'Shelf', 'Status', 'Timestamp']
+columns = ['Equipment', 'Tech Name', 'Cabinet/Location', 'Shelf', 'Status', 'Timestamp']
 
-# Create CSV file if it does not exist
 def create_csv_if_not_exists(file_name, columns):
     if not os.path.exists(file_name):
-        with open(file_name, 'w') as f:
-            f.write(','.join(columns) + '\n')
-            
-# Determining Equipment statuses
+        df = pd.DataFrame(columns=columns)
+        df.to_csv(file_name, index=False)
+        print(f"Created {file_name} with columns: {columns}")
+    else:
+        print(f"{file_name} already exists.")
+        # For debugging, print the first few lines of the existing file
+        print(pd.read_csv(file_name).head())
+
 def determine_status(equipment, cabinet):
     log_file = STORAGE_LOG_FILE if equipment.startswith('STOR.') else LOG_FILE
     if not os.path.exists(log_file):
@@ -28,9 +32,8 @@ def determine_status(equipment, cabinet):
     if cabinet == 'Quality Calibration':
         return 'checked out'
 
-    return 'checked in' if count % 2 == 1 else 'checked out'
+    return 'checked out' if count % 2 == 1 else 'checked in'
 
-# Deleting last entry for specific Equipment when necessary
 def delete_last_entry_for_equipment(equipment_name, log_file):
     try:
         df = pd.read_csv(log_file)
@@ -59,7 +62,7 @@ class App(tk.Tk):
         container.pack(expand=True, padx=5, pady=5)
 
         # Create entry fields for each column
-        for col in COLUMNS[:-2]:
+        for col in columns[:-2]:
             self.create_entry_field(container, col, large_font)
 
         # Message label within the container
@@ -109,7 +112,7 @@ class App(tk.Tk):
             self.save_entry()
 
     def save_entry(self):
-        missing_field = next((col for col in COLUMNS[:-2] if not self.entries[col].get().strip()), None)
+        missing_field = next((col for col in columns[:-2] if not self.entries[col].get().strip()), None)
         if missing_field:
             self.display_message(f"Entry not submitted. Missing '{missing_field}' field.", 'red')
             self.clear_entries()
@@ -122,11 +125,12 @@ class App(tk.Tk):
         self.after(4000, self.clear_entries)
 
     def collect_entry_data(self):
-        return {col: self.entries[col].get() for col in COLUMNS[:-2]}
+        return {col: self.entries[col].get() for col in columns[:-2]}
 
     def append_entry_to_file(self, entry, file_name):
         entry['Status'] = determine_status(entry['Equipment'], entry.get('Cabinet/Location', ''))
-        entry['Timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        entry['Timestamp'] = datetime.now().strftime('%m-%d-%Y %I:%M %p')
+
         with open(file_name, 'a', newline='') as f:
             pd.DataFrame([entry]).to_csv(f, header=False, index=False)
 
@@ -154,10 +158,17 @@ class App(tk.Tk):
         else:
             self.display_message("Please enter the Equipment name for Admin Correction.", 'red')
 
+    def equipment_exists(self, equipment_name, log_file):
+        try:
+            df = pd.read_csv(log_file)
+            return not df[df['Equipment'] == equipment_name].empty
+        except (FileNotFoundError, pd.errors.EmptyDataError):
+            return False
+
 # Main Function
 def main():
-    create_csv_if_not_exists(LOG_FILE, COLUMNS)
-    create_csv_if_not_exists(STORAGE_LOG_FILE, COLUMNS)
+    create_csv_if_not_exists(LOG_FILE, columns)
+    create_csv_if_not_exists(STORAGE_LOG_FILE, columns)
     app = App()
     app.mainloop()
 
